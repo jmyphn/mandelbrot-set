@@ -6,16 +6,16 @@
 #include "../include/common.hpp"
 #include "../include/solver.hpp"
 
-#define RGB common::RGB
+#define uchar unsigned char
 
 int X, Y, max_iter, rank, num_procs;
 
 double real_max, real_min, imag_max, imag_min;
 
-unsigned char *grid;
-RGB *colors;
+uchar *grid;
+uchar *colors;
 
-void init(unsigned char *grid_, RGB *colors_, int X_, int Y_, int max_iter_, double real_max_, double real_min_, double imag_max_, double imag_min_, int rank_, int num_procs_) {
+void init(uchar *grid_, uchar *colors_, int X_, int Y_, int max_iter_, double real_max_, double real_min_, double imag_max_, double imag_min_, int rank_, int num_procs_) {
     grid = grid_;
     colors = colors_;
     X = X_;
@@ -33,16 +33,16 @@ void run() {
     std::cout << "In run" << std::endl;
     for (int py = 0; py < Y; py++) {
         for (int px = 0; px < X; px++) {
-            RGB color = find_mandelbrot(px, py);
-            grid[py * X * 3 + px * 3] = color.r;
-            grid[py * X * 3 + px * 3 + 1] = color.g;
-            grid[py * X * 3 + px * 3 + 2] = color.b;
+            uchar* color = find_mandelbrot(px, py);
+            grid[py * X * 3 + px * 3] = color[0];
+            grid[py * X * 3 + px * 3 + 1] = color[1];
+            grid[py * X * 3 + px * 3 + 2] = color[2];
         }
     }
     std::cout << "Exiting run" << std::endl;
 }
 
-RGB find_mandelbrot(int px, int py) {
+uchar* find_mandelbrot(int px, int py) {
     double b = 0; // complex (c)
     double a = 0;
 
@@ -65,15 +65,28 @@ RGB find_mandelbrot(int px, int py) {
         double nu = log(log_zn / log(2.0))/log(2.0);
         i += 1.0 - nu;
     }
-    RGB color1 = colors[(int)i];
-    RGB color2 = colors[(int) i + 1 > max_iter ? (int) i : (int) i + 1];
+
+    int idx = 3 * (int) i;
+    
+    uchar *color1 = new uchar[3];
+    uchar *color2 = new uchar[3];
+    
+    color1[0] = colors[idx];
+    color1[1] = colors[idx + 1 > max_iter ? (int) idx : (int) idx + 1];
+    color1[2] = colors[idx + 2 > max_iter ? (int) idx : (int) idx + 2];
+
+
+    // RGB color2 = colors[(int) i + 1 > max_iter ? (int) i : (int) i + 1];
+    idx = idx + 3 > 3 * max_iter ? 3 * max_iter : idx + 3;
+    color2[0] = colors[idx];
+    color2[1] = colors[idx + 1];
+    color2[2] = colors[idx + 2];
 
     double t = i - (int) i;
-    RGB color = RGB(
-        common::interpolate(color1.r, color2.r, t),
-        common::interpolate(color1.g, color2.g, t),
-        common::interpolate(color1.b, color2.b, t)
-    );
+    uchar* color = new uchar[3];
+    color[0] = (1 - t) * color1[0] + t * color2[0];
+    color[1] = (1 - t) * color1[1] + t * color2[1];
+    color[2] = (1 - t) * color1[2] + t * color2[2];
     return color;
 }
 

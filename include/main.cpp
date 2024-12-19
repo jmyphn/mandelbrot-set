@@ -95,8 +95,7 @@ int main(int argc, char **argv) {
     std::cout << "Device name: " << prop.name << std::endl;
   #endif
 
-  RGB *colors = common::make_gradient(max_iter);
-  std::cout << "Colors: " << colors->r << " " << colors->g << " " << colors->b << std::endl;
+  uchar* colors = common::make_gradient(max_iter);
   uchar *grid = new uchar[x * y * 3];
 
   clock_t init_start = clock();
